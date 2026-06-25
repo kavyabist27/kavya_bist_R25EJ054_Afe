@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Daily Despatch — News That Matters</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/lucide-static/0.383.0/lucide.min.js"></script>
+<style>
+  :root{
+    --ink:#1a1a1a;
+    --ink-soft:#222222;
+    --rule:#d8d3c8;
+    --paper:#ffffff;
+    --paper-warm:#faf8f3;
+    --urgent:#D92121;
+    --urgent-dark:#a3171a;
+    --steel:#1c2530;
+  }
+  body{ font-family:'Inter',Arial,sans-serif; color:var(--ink-soft); background:var(--paper); }
+  .serif{ font-family:'Georgia','Times New Roman',serif; }
+  .hairline{ border-color:var(--rule); }
+  .masthead{ font-family:'Georgia','Times New Roman',serif; letter-spacing:-0.5px; }
+  /* Ticker */
+  .ticker-track{ display:inline-block; white-space:nowrap; animation: scroll-left 32s linear infinite; }
+  .ticker-track:hover{ animation-play-state: paused; }
+  @keyframes scroll-left{ 0%{ transform: translateX(0); } 100%{ transform: translateX(-100%); } }
+  /* Live pulse */
+  .pulse-dot{ position:relative; }
+  .pulse-dot::before{
+    content:''; position:absolute; inset:0; border-radius:50%;
+    background:var(--urgent); opacity:.75;
+    animation: pulse-ring 1.5s cubic-bezier(0.4,0,0.6,1) infinite;
+  }
+  @keyframes pulse-ring{ 0%{ transform:scale(1); opacity:.7;} 70%{ transform:scale(2.4); opacity:0;} 100%{ opacity:0;} }
+  .headline-link{ transition: color .15s ease; }
+  .headline-link:hover{ color:var(--urgent); }
+  ::-webkit-scrollbar{ height:6px; width:6px; }
+  ::-webkit-scrollbar-thumb{ background:#c9c2b2; border-radius:3px; }
+  .carousel-track{ scroll-snap-type:x mandatory; -webkit-overflow-scrolling:touch; }
+  .carousel-item{ scroll-snap-align:start; }
+  .tab-active{ border-bottom:3px solid var(--urgent); color:var(--ink); font-weight:700; }
+  .skeleton{ background:linear-gradient(90deg,#eee 25%,#f5f5f5 37%,#eee 63%); background-size:400% 100%; animation: skel 1.4s ease infinite; }
+  @keyframes skel{ 0%{background-position:100% 50%;} 100%{background-position:0 50%;} }
+  .edition-menu{ display:none; }
+  .edition-open .edition-menu{ display:block; }
+  .mobile-nav{ transform:translateX(-100%); transition: transform .25s ease; }
+  .mobile-nav.open{ transform:translateX(0); }
+  .lazy-img{ background:#eee; }
+  details > summary{ list-style:none; }
+  details > summary::-webkit-details-marker{ display:none; }
+  .cat-pill{ font-family:'Georgia',serif; }
+</style>
+</head>
+<body class="bg-white text-[#222]">
+
+<!-- =========================================================
+     TOP UTILITY BAR
+========================================================= -->
+<div class="bg-[#1c2530] text-gray-300 text-[11px] sm:text-xs">
+  <div class="max-w-[1280px] mx-auto px-3 sm:px-4 flex items-center justify-between h-8">
+    <div class="flex items-center gap-3">
+      <span id="liveClock" class="font-mono tracking-tight"></span>
+      <span class="hidden sm:inline text-gray-500">|</span>
+      <span id="liveDate" class="hidden sm:inline"></span>
+    </div>
+    <div class="flex items-center gap-3 sm:gap-4">
+      <!-- Weather widget -->
+      <div class="flex items-center gap-1 text-gray-300">
+        <i data-lucide="sun" class="w-3.5 h-3.5 text-amber-300"></i>
+        <span id="weatherTemp">34°C</span>
+        <span class="hidden md:inline text-gray-500" id="weatherCity">Bengaluru</span>
+      </div>
+      <span class="hidden sm:inline text-gray-500">|</span>
+      <!-- Edition Switcher -->
+      <div class="relative" id="editionWrap">
+        <button id="editionBtn" class="flex items-center gap-1 hover:text-white">
+          <i data-lucide="map-pin" class="w-3.5 h-3.5"></i>
+          <span id="editionLabel">Bengaluru Edition</span>
+          <i data-lucide="chevron-down" class="w-3 h-3"></i>
+        </button>
+        <div id="editionMenu" class="edition-menu absolute right-0 mt-2 w-44 bg-white text-[#222] shadow-xl border border-gray-200 rounded-sm z-50 py-1">
+          <!-- filled by JS -->
+        </div>
+      </div>
+      <span class="hidden lg:inline text-gray-500">|</span>
+      <a href="#" class="hidden lg:inline hover:text-white">E-Paper</a>
+      <a href="#" class="hidden lg:inline hover:text-white">Sign In</a>
+    </div>
+  </div>
+</div>
+
+<!-- =========================================================
+     MASTHEAD / BRANDING
+========================================================= -->
+<header class="border-b hairline border-b-2">
+  <div class="max-w-[1280px] mx-auto px-3 sm:px-4 py-4 flex items-center justify-between">
+    <button id="hamburgerBtn" class="lg:hidden p-1" aria-label="Open menu">
+      <i data-lucide="menu" class="w-6 h-6"></i>
+    </button>
+    <div class="flex-1 text-center lg:text-left">
+      <h1 class="masthead text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-[#1a1a1a]">
+        The Daily Despatch
+      </h1>
+      <p class="hidden sm:block text-[10px] sm:text-xs uppercase tracking-[0.25em] text-gray-500 mt-1">Est. 1924 &nbsp;·&nbsp; Truth, Printed Daily</p>
+    </div>
+    <div class="w-7 lg:hidden"></div>
+    <div class="hidden lg:flex items-center gap-4 text-gray-600">
+      <i data-lucide="search" class="w-5 h-5 cursor-pointer hover:text-[#D92121]"></i>
+      <i data-lucide="bell" class="w-5 h-5 cursor-pointer hover:text-[#D92121]"></i>
+      <button class="bg-[#D92121] text-white text-xs font-bold uppercase px-4 py-2 tracking-wide hover:bg-[#a3171a]">Subscribe</button>
+    </div>
+  </div>
+</header>
+
+<!-- =========================================================
+     STICKY NAVIGATION
+========================================================= -->
+<nav id="mainNav" class="sticky top-0 z-40 bg-[#1c2530] text-white shadow-md">
+  <div class="max-w-[1280px] mx-auto px-3 sm:px-4">
+    <ul class="hidden lg:flex items-center text-[13px] font-semibold uppercase tracking-wide">
+      <li><a href="#" class="block px-3 py-3 bg-[#D92121] hover:bg-[#a3171a]">Home</a></li>
+      <li><a href="#" class="block px-3 py-3 hover:bg-white/10 flex items-center gap-1">Latest <span class="pulse-dot-wrap relative inline-flex w-1.5 h-1.5"><span class="pulse-dot absolute inline-flex w-1.5 h-1.5 rounded-full"></span><span class="relative inline-flex rounded-full w-1.5 h-1.5 bg-[#D92121]"></span></span></a></li>
+      <li><a href="#" class="block px-3 py-3 hover:bg-white/10">City</a></li>
+      <li><a href="#" class="block px-3 py-3 hover:bg-white/10">India</a></li>
+      <li><a href="#" class="block px-3 py-3 hover:bg-white/10">World</a></li>
+      <li><a href="#" class="block px-3 py-3 hover:bg-white/10">Business</a></li>
+      <li><a href="#" class="block px-3 py-3 hover:bg-white/10">Tech</a></li>
+      <li><a href="#" class="block px-3 py-3 hover:bg-white/10">Sports</a></li>
+      <li><a href="#" class="block px-3 py-3 hover:bg-white/10">Entertainment</a></li>
+      <li><a href="#" class="block px-3 py-3 hover:bg-white/10">Lifestyle</a></li>
+    </ul>
+    <!-- mobile compact nav row -->
+    <div class="lg:hidden flex items-center gap-4 overflow-x-auto text-[12px] font-semibold uppercase tracking-wide py-2.5 no-scrollbar">
+      <a href="#" class="whitespace-nowrap text-[#ffb3b3] border-b-2 border-[#D92121] pb-0.5">Home</a>
+      <a href="#" class="whitespace-nowrap text-gray-300">Latest</a>
+      <a href="#" class="whitespace-nowrap text-gray-300">City</a>
+      <a href="#" class="whitespace-nowrap text-gray-300">India</a>
+      <a href="#" class="whitespace-nowrap text-gray-300">World</a>
+      <a href="#" class="whitespace-nowrap text-gray-300">Business</a>
+      <a href="#" class="whitespace-nowrap text-gray-300">Sports</a>
+    </div>
+  </div>
+</nav>
+
+<!-- Mobile slide menu -->
+<div id="mobileOverlay" class="fixed inset-0 bg-black/50 z-50 hidden"></div>
+<aside id="mobileNav" class="mobile-nav fixed top-0 left-0 h-full w-72 bg-white z-50 shadow-2xl overflow-y-auto">
+  <div class="flex items-center justify-between p-4 border-b hairline">
+    <span class="masthead text-xl font-bold">Menu</span>
+    <button id="closeMobileNav"><i data-lucide="x" class="w-6 h-6"></i></button>
+  </div>
+  <ul class="text-sm font-semibold uppercase tracking-wide divide-y divide-gray-100">
+    <li><a href="#" class="block px-4 py-3 text-[#D92121]">Home</a></li>
+    <li><a href="#" class="block px-4 py-3">Latest</a></li>
+    <li><a href="#" class="block px-4 py-3">City</a></li>
+    <li><a href="#" class="block px-4 py-3">India</a></li>
+    <li><a href="#" class="block px-4 py-3">World</a></li>
+    <li><a href="#" class="block px-4 py-3">Business</a></li>
+    <li><a href="#" class="block px-4 py-3">Tech</a></li>
+    <li><a href="#" class="block px-4 py-3">Sports</a></li>
+    <li><a href="#" class="block px-4 py-3">Entertainment</a></li>
+    <li><a href="#" class="block px-4 py-3">Lifestyle</a></li>
+  </ul>
+</aside>
+
+<!-- =========================================================
+     BREAKING NEWS TICKER
+========================================================= -->
+<div class="bg-[#D92121] text-white overflow-hidden">
+  <div class="max-w-[1280px] mx-auto px-3 sm:px-4 flex items-center h-9">
+    <span class="flex items-center gap-1.5 font-bold text-[11px] sm:text-xs uppercase tracking-wider pr-3 border-r border-white/40 mr-3 shrink-0">
+      <span class="relative inline-flex w-2 h-2"><span class="pulse-dot absolute inline-flex w-2 h-2 rounded-full bg-white"></span><span class="relative inline-flex rounded-full w-2 h-2 bg-white"></span></span>
+      Breaking
+    </span>
+    <div class="overflow-hidden flex-1 whitespace-nowrap">
+      <span class="ticker-track text-[12px] sm:text-sm font-medium">
+        &nbsp;Parliament passes new Data Protection Amendment Bill with majority vote &nbsp;•&nbsp; Sensex surges 480 pts as IT stocks rally on strong Q1 earnings &nbsp;•&nbsp; Heavy rainfall warning issued for coastal Karnataka over next 48 hours &nbsp;•&nbsp; India clinches series 3-1 after dramatic final-over finish in Mumbai &nbsp;•&nbsp; Union Cabinet approves ₹76,000 crore semiconductor mission expansion &nbsp;•&nbsp; Metro Phase-3 corridor to open for public next month, CM confirms &nbsp;•&nbsp;
+      </span>
+    </div>
+  </div>
+</div>
+
+<!-- =========================================================
+     AD: LEADERBOARD 728x90
+========================================================= -->
+<div class="max-w-[1280px] mx-auto px-3 sm:px-4 py-3 flex justify-center">
+  <div class="w-full max-w-[728px] h-[90px] bg-gray-100 border border-dashed border-gray-300 flex items-center justify-center text-gray-400 text-xs font-semibold uppercase tracking-wide">
+    Advertisement · 728 × 90
+  </div>
+</div>
+
+<!-- =========================================================
+     MAIN 3-COLUMN LAYOUT
+========================================================= -->
+<main class="max-w-[1280px] mx-auto px-3 sm:px-4 pb-10">
+<div class="grid grid-cols-1 lg:grid-cols-[25%_50%_25%] gap-5">
+
+  <!-- ============ LEFT COLUMN: BRIEFS ============ -->
+  <aside class="order-3 lg:order-1">
+
+    <!-- Mobile: swipeable carousel version -->
+    <div class="lg:hidden mb-6">
+      <h2 class="serif text-lg font-bold border-b-2 border-[#1a1a1a] pb-1.5 mb-2 flex items-center gap-2">
+        <span class="text-[#D92121]">●</span> Latest News
+      </h2>
+      <div class="carousel-track flex gap-3 overflow-x-auto pb-2 -mx-1 px-1">
+        <!-- items injected by JS -->
+      </div>
+    </div>
+
+    <!-- Desktop briefs stack -->
+    <div class="hidden lg:block sticky top-[100px]">
+      <h2 class="serif text-lg font-bold border-b-2 border-[#1a1a1a] pb-1.5 mb-3 flex items-center gap-2">
+        <span class="text-[#D92121]">●</span> Briefs
+      </h2>
+      <ul id="briefsList" class="space-y-3 text-sm divide-y divide-gray-100"></ul>
+
+      <div class="mt-6 w-full h-[250px] bg-gray-100 border border-dashed border-gray-300 flex items-center justify-center text-gray-400 text-xs font-semibold uppercase">
+        Ad · 300 × 250
+      </div>
+
+      <!-- Photo gallery widget -->
+      <div class="mt-6">
+        <h3 class="serif text-base font-bold border-b border-[#1a1a1a] pb-1.5 mb-2">In Pictures</h3>
+        <div class="relative">
+          <div id="photoCarousel" class="overflow-hidden rounded-sm">
+            <img loading="lazy" src="https://images.unsplash.com/photo-1495020689067-958852a7765e?w=600&q=60" class="w-full h-40 object-cover lazy-img" alt="gallery">
+          </div>
+          <div class="flex justify-between mt-1.5">
+            <button id="galPrev" class="text-xs px-2 py-1 bg-gray-100 hover:bg-gray-200">‹ Prev</button>
+            <span id="galCount" class="text-xs text-gray-500 self-center">1 / 5</span>
+            <button id="galNext" class="text-xs px-2 py-1 bg-gray-100 hover:bg-gray-200">Next ›</button>
+          </div>
+          <p id="galCaption" class="text-xs text-gray-600 mt-1.5 leading-snug"></p>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ============ CENTER COLUMN: HERO ZONE ============ -->
+  <section class="order-1 lg:order-2">
+
+    <!-- Super Breaking Hero -->
+    <article class="mb-6">
+      <span class="inline-block bg-[#D92121] text-white text-[11px] font-bold uppercase tracking-wider px-2 py-1 mb-2">Super Breaking</span>
+      <a href="#" class="headline-link block">
+        <h2 class="serif text-2xl sm:text-3xl lg:text-[2.4rem] leading-[1.1] font-bold text-[#1a1a1a]">
+          Centre Unveils ₹2.1 Lakh Crore Infrastructure Push, Targets 40 New Expressways by 2028
+        </h2>
+      </a>
+      <p class="text-gray-600 mt-2 text-sm sm:text-base leading-relaxed">
+        The mega outlay, announced at the National Infra Summit, aims to slash freight transit time by 30% and create over 4 million construction jobs across 18 states over the next four years.
+      </p>
+      <div class="flex items-center gap-2 text-xs text-gray-500 mt-2">
+        <span class="font-semibold text-[#222]">By Aniruddh Mehta</span>
+        <span>·</span>
+        <span id="heroTime">2 mins ago</span>
+        <span>·</span>
+        <span class="flex items-center gap-1"><i data-lucide="message-square" class="w-3.5 h-3.5"></i> 312</span>
+      </div>
+      <a href="#" class="block mt-3 relative group overflow-hidden">
+        <img loading="lazy" src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=1200&q=70"
+             class="w-full h-[260px] sm:h-[380px] lg:h-[440px] object-cover lazy-img group-hover:scale-[1.02] transition-transform duration-300" alt="Infrastructure expansion">
+        <span class="absolute bottom-0 left-0 bg-black/70 text-white text-xs px-3 py-1.5">Expressway construction underway near Pune. (PTI Photo)</span>
+      </a>
+    </article>
+
+    <!-- Live Blog Component -->
+    <article class="mb-8 border border-gray-200 rounded-sm overflow-hidden">
+      <div class="bg-[#1c2530] text-white px-4 py-2.5 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <span class="relative inline-flex w-2.5 h-2.5"><span class="pulse-dot absolute inline-flex w-2.5 h-2.5 rounded-full bg-[#ff4d4d]"></span><span class="relative inline-flex rounded-full w-2.5 h-2.5 bg-[#D92121]"></span></span>
+          <span class="font-bold text-xs uppercase tracking-wider">Live Blog</span>
+        </div>
+        <span class="text-[11px] text-gray-300">Updated <span id="liveBlogTimer">just now</span></span>
+      </div>
+      <h3 class="serif text-xl font-bold px-4 pt-3">Monsoon Session 2026: Parliament Live Updates</h3>
+      <div id="liveBlogFeed" class="px-4 pb-4 pt-2 space-y-4 max-h-[340px] overflow-y-auto"></div>
+    </article>
+
+    <!-- Video Player Embed -->
+    <article class="mb-8">
+      <h3 class="serif text-lg font-bold border-b-2 border-[#1a1a1a] pb-1.5 mb-3">Watch</h3>
+      <div class="relative bg-black rounded-sm overflow-hidden group cursor-pointer" id="videoPlayerBox">
+        <img loading="lazy" src="https://images.unsplash.com/photo-1495020689067-958852a7765e?w=900&q=60" class="w-full h-[220px] sm:h-[320px] object-cover opacity-90 lazy-img" alt="video thumbnail">
+        <div class="absolute inset-0 flex items-center justify-center">
+          <div class="w-14 h-14 rounded-full bg-white/90 flex items-center justify-center group-hover:scale-110 transition-transform">
+            <i data-lucide="play" class="w-6 h-6 text-[#D92121] fill-current"></i>
+          </div>
+        </div>
+        <span class="absolute bottom-2 right-2 bg-black/80 text-white text-[11px] px-1.5 py-0.5 rounded">04:12</span>
+      </div>
+      <p class="text-sm font-semibold mt-2">Inside the new bullet-train corridor: a first look at the Mumbai–Ahmedabad line</p>
+    </article>
+
+    <!-- 2x2 Grid of regional/national visual stories -->
+    <h3 class="serif text-lg font-bold border-b-2 border-[#1a1a1a] pb-1.5 mb-3">Top Stories</h3>
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-8">
+
+      <article class="group">
+        <a href="#" class="block relative overflow-hidden">
+          <img loading="lazy" src="https://images.unsplash.com/photo-1560472354-b1ff1c8d6c7e?w=600&q=65" class="w-full h-44 object-cover lazy-img group-hover:scale-[1.03] transition-transform" alt="">
+          <span class="absolute top-2 left-2 bg-[#D92121] text-white text-[10px] font-bold uppercase px-1.5 py-0.5">City</span>
+        </a>
+        <a href="#" class="headline-link block mt-2 serif text-base font-bold leading-snug">Bengaluru's Outer Ring Road set for ₹9,000 cr elevated corridor revamp</a>
+        <span class="text-xs text-gray-500">18 mins ago</span>
+      </article>
+
+      <article class="group">
+        <a href="#" class="block relative overflow-hidden">
+          <img loading="lazy" src="https://images.unsplash.com/photo-1605902711622-cfb43c4437b5?w=600&q=65" class="w-full h-44 object-cover lazy-img group-hover:scale-[1.03] transition-transform" alt="">
+          <span class="absolute top-2 left-2 bg-[#1c2530] text-white text-[10px] font-bold uppercase px-1.5 py-0.5">World</span>
+        </a>
+        <a href="#" class="headline-link block mt-2 serif text-base font-bold leading-snug">G20 climate finance talks end in deadlock over loss-and-damage fund</a>
+        <span class="text-xs text-gray-500">32 mins ago</span>
+      </article>
+
+      <article class="group">
+        <a href="#" class="block relative overflow-hidden">
+          <img loading="lazy" src="https://images.unsplash.com/photo-1542744173-8e7e53415bb0?w=600&q=65" class="w-full h-44 object-cover lazy-img group-hover:scale-[1.03] transition-transform" alt="">
+          <span class="absolute top-2 left-2 bg-[#D92121] text-white text-[10px] font-bold uppercase px-1.5 py-0.5">Sports</span>
+        </a>
+        <a href="#" class="headline-link block mt-2 serif text-base font-bold leading-snug">India seal series win after Bumrah's 5-wicket haul seals tense chase</a>
+        <span class="text-xs text-gray-500">41 mins ago</span>
+      </article>
+
+      <article class="group">
+        <a href="#" class="block relative overflow-hidden">
+          <img loading="lazy" src="https://images.unsplash.com/photo-1542222209-258a64ee82ce?w=600&q=65" class="w-full h-44 object-cover lazy-img group-hover:scale-[1.03] transition-transform" alt="">
+          <span class="absolute top-2 left-2 bg-[#1c2530] text-white text-[10px] font-bold uppercase px-1.5 py-0.5">Business</span>
+        </a>
+        <a href="#" class="headline-link block mt-2 serif text-base font-bold leading-snug">IT majors post strongest quarterly hiring numbers since 2022</a>
+        <span class="text-xs text-gray-500">1 hr ago</span>
+      </article>
+    </div>
+
+    <!-- Photo carousel widget embedded in stream -->
+    <article class="mb-8">
+      <h3 class="serif text-lg font-bold border-b-2 border-[#1a1a1a] pb-1.5 mb-3">Gallery: Monsoon Hits the Western Ghats</h3>
+      <div class="carousel-track flex gap-3 overflow-x-auto pb-1">
+        <div class="carousel-item shrink-0 w-[260px]"><img loading="lazy" src="https://images.unsplash.com/photo-1519692933481-e162a57d6721?w=500&q=60" class="w-full h-40 object-cover lazy-img"><p class="text-xs text-gray-600 mt-1">Waterfalls swell across Coorg region.</p></div>
+        <div class="carousel-item shrink-0 w-[260px]"><img loading="lazy" src="https://images.unsplash.com/photo-1501594907352-04cda38ebc29?w=500&q=60" class="w-full h-40 object-cover lazy-img"><p class="text-xs text-gray-600 mt-1">Farmers begin sowing as reservoirs fill up.</p></div>
+        <div class="carousel-item shrink-0 w-[260px]"><img loading="lazy" src="https://images.unsplash.com/photo-1438449805896-28a666819a20?w=500&q=60" class="w-full h-40 object-cover lazy-img"><p class="text-xs text-gray-600 mt-1">Commuters navigate waterlogged streets.</p></div>
+        <div class="carousel-item shrink-0 w-[260px]"><img loading="lazy" src="https://images.unsplash.com/photo-1465146344425-f00d5f5c8f07?w=500&q=60" class="w-full h-40 object-cover lazy-img"><p class="text-xs text-gray-600 mt-1">Clouds roll over the Nilgiri hills.</p></div>
+      </div>
+    </article>
+
+    <!-- Ad: mid-content -->
+    <div class="w-full h-[100px] bg-gray-100 border border-dashed border-gray-300 flex items-center justify-center text-gray-400 text-xs font-semibold uppercase mb-8">
+      Advertisement
+    </div>
+
+    <!-- More headlines list -->
+    <h3 class="serif text-lg font-bold border-b-2 border-[#1a1a1a] pb-1.5 mb-3">More News</h3>
+    <ul id="moreNewsList" class="divide-y divide-gray-100 text-sm"></ul>
+
+  </section>
+
+  <!-- ============ RIGHT COLUMN: TRENDING & OPINION ============ -->
+  <aside class="order-2 lg:order-3">
+    <div class="lg:sticky lg:top-[100px]">
+
+      <!-- Tabbed widget -->
+      <div class="mb-6">
+        <div class="flex border-b-2 border-[#1a1a1a] text-sm font-bold">
+          <button data-tab="most-read" class="tab-btn flex-1 py-2 tab-active">Most Read</button>
+          <button data-tab="trending" class="tab-btn flex-1 py-2 text-gray-500">Trending Now</button>
+        </div>
+        <ol id="mostReadPanel" class="tab-panel divide-y divide-gray-100 text-sm"></ol>
+        <ol id="trendingPanel" class="tab-panel hidden divide-y divide-gray-100 text-sm"></ol>
+      </div>
+
+      <!-- Ad 300x250 -->
+      <div class="w-full h-[250px] bg-gray-100 border border-dashed border-gray-300 flex items-center justify-center text-gray-400 text-xs font-semibold uppercase mb-6">
+        Ad · 300 × 250
+      </div>
+
+      <!-- Opinion / Editorial -->
+      <div class="mb-6">
+        <h3 class="serif text-lg font-bold border-b-2 border-[#1a1a1a] pb-1.5 mb-3">Opinion &amp; Editorial</h3>
+        <div id="opinionList" class="space-y-4"></div>
+      </div>
+
+      <!-- Edition-localized panel -->
+      <div class="mb-6 bg-[#faf8f3] border border-gray-200 p-4">
+        <h4 class="serif text-base font-bold mb-2 flex items-center gap-1.5"><i data-lucide="map-pin" class="w-4 h-4 text-[#D92121]"></i> <span id="localPanelTitle">Bengaluru</span> Roundup</h4>
+        <ul id="localNewsList" class="space-y-2 text-sm"></ul>
+      </div>
+
+      <!-- Sticky ad -->
+      <div class="w-full h-[250px] bg-gray-100 border border-dashed border-gray-300 flex items-center justify-center text-gray-400 text-xs font-semibold uppercase">
+        Ad · 300 × 250
+      </div>
+    </div>
+  </aside>
+
+</div>
+</main>
+
+<!-- =========================================================
+     FOOTER
+========================================================= -->
+<footer class="bg-[#1c2530] text-gray-300 mt-10">
+  <div class="max-w-[1280px] mx-auto px-3 sm:px-4 py-10 grid grid-cols-2 sm:grid-cols-4 gap-6 text-sm">
+    <div>
+      <h5 class="text-white font-bold uppercase text-xs mb-3 tracking-wide">Sections</h5>
+      <ul class="space-y-1.5 text-gray-400">
+        <li><a href="#" class="hover:text-white">India</a></li>
+        <li><a href="#" class="hover:text-white">World</a></li>
+        <li><a href="#" class="hover:text-white">Business</a></li>
+        <li><a href="#" class="hover:text-white">Sports</a></li>
+      </ul>
+    </div>
+    <div>
+      <h5 class="text-white font-bold uppercase text-xs mb-3 tracking-wide">Company</h5>
+      <ul class="space-y-1.5 text-gray-400">
+        <li><a href="#" class="hover:text-white">About Us</a></li>
+        <li><a href="#" class="hover:text-white">Advertise</a></li>
+        <li><a href="#" class="hover:text-white">Careers</a></li>
+        <li><a href="#" class="hover:text-white">Contact</a></li>
+      </ul>
+    </div>
+    <div>
+      <h5 class="text-white font-bold uppercase text-xs mb-3 tracking-wide">Legal</h5>
+      <ul class="space-y-1.5 text-gray-400">
+        <li><a href="#" class="hover:text-white">Privacy Policy</a></li>
+        <li><a href="#" class="hover:text-white">Terms of Use</a></li>
+        <li><a href="#" class="hover:text-white">Cookie Policy</a></li>
+      </ul>
+    </div>
+    <div>
+      <h5 class="text-white font-bold uppercase text-xs mb-3 tracking-wide">Follow Us</h5>
+      <div class="flex gap-3 text-gray-400">
+        <i data-lucide="facebook" class="w-4 h-4"></i>
+        <i data-lucide="twitter" class="w-4 h-4"></i>
+        <i data-lucide="instagram" class="w-4 h-4"></i>
+        <i data-lucide="youtube" class="w-4 h-4"></i>
+      </div>
+    </div>
+  </div>
+  <div class="border-t border-white/10 py-4 text-center text-xs text-gray-500">
+    © 2026 The Daily Despatch. All rights reserved. A demo newspaper portal built for illustration.
+  </div>
+</footer>
+
+<script>
+lucide.createIcons();
+
+/* ---------- Clock & Date ---------- */
+function pad(n){ return n.toString().padStart(2,'0'); }
+function updateClock(){
+  const d = new Date();
+  document.getElementById('liveClock').textContent = pad(d.getHours())+':'+pad(d.getMinutes())+':'+pad(d.getSeconds());
+  document.getElementById('liveDate').textContent = d.toLocaleDateString('en-IN',{weekday:'long', day:'numeric', month:'long', year:'numeric'});
+}
+updateClock(); setInterval(updateClock,1000);
+
+/* ---------- Edition Switcher ---------- */
+const editions = [
+  {city:'Bengaluru', temp:'34°C', weather:'sunny'},
+  {city:'Mumbai', temp:'31°C', weather:'cloudy'},
+  {city:'Delhi', temp:'39°C', weather:'sunny'},
+  {city:'Kolkata', temp:'33°C', weather:'rain'},
+  {city:'Chennai', temp:'36°C', weather:'sunny'},
+  {city:'NRI Edition', temp:'—', weather:'sunny'},
+];
+const editionMenu = document.getElementById('editionMenu');
+editions.forEach(e=>{
+  const item = document.createElement('button');
+  item.className = 'w-full text-left px-3 py-2 text-xs hover:bg-gray-100 flex items-center justify-between';
+  item.innerHTML = `<span>${e.city}</span><span class="text-gray-400">${e.temp}</span>`;
+  item.addEventListener('click', ()=> switchEdition(e));
+  editionMenu.appendChild(item);
+});
+function switchEdition(e){
+  document.getElementById('editionLabel').textContent = e.city + ' Edition';
+  document.getElementById('weatherTemp').textContent = e.temp;
+  document.getElementById('weatherCity').textContent = e.city;
+  document.getElementById('localPanelTitle').textContent = e.city;
+  editionMenu.classList.add('hidden');
+  renderLocalNews(e.city);
+}
+document.getElementById('editionBtn').addEventListener('click', (ev)=>{
+  ev.stopPropagation();
+  editionMenu.classList.toggle('hidden');
+});
+document.addEventListener('click', ()=> editionMenu.classList.add('hidden'));
+editionMenu.classList.add('hidden');
+
+/* ---------- Mobile Nav ---------- */
+const mobileNav = document.getElementById('mobileNav');
+const mobileOverlay = document.getElementById('mobileOverlay');
+function openMobileNav(){ mobileNav.classList.add('open'); mobileOverlay.classList.remove('hidden'); }
+function closeMobileNav(){ mobileNav.classList.remove('open'); mobileOverlay.classList.add('hidden'); }
+document.getElementById('hamburgerBtn').addEventListener('click', openMobileNav);
+document.getElementById('closeMobileNav').addEventListener('click', closeMobileNav);
+mobileOverlay.addEventListener('click', closeMobileNav);
+
+/* ---------- Briefs ---------- */
+const briefs = [
+  ['12:48 PM','RBI keeps repo rate unchanged at 6.5% for fourth consecutive meeting'],
+  ['12:31 PM','Cyclone warning downgraded for Odisha coast as system weakens'],
+  ['12:10 PM','Delhi air quality dips to "moderate" category after overnight rain'],
+  ['11:52 AM','ISRO confirms next lunar payload launch window for September'],
+  ['11:35 AM','Fuel prices unchanged for 14th straight day across metro cities'],
+  ['11:20 AM','SC to hear plea on electoral bonds disclosure on Thursday'],
+  ['10:58 AM','Gold prices slip ₹320 as global cues weigh on bullion'],
+  ['10:40 AM','Mumbai local trains hit briefly after signal fault near Dadar'],
+  ['10:15 AM','Heatwave alert issued for parts of Rajasthan, Haryana'],
+  ['09:58 AM','New education policy rollout to begin in 200 districts'],
+];
+const briefsList = document.getElementById('briefsList');
+briefs.forEach(([t,h])=>{
+  const li = document.createElement('li');
+  li.className = 'pt-3 first:pt-0';
+  li.innerHTML = `<span class="text-[11px] text-[#D92121] font-bold block">${t}</span><a href="#" class="headline-link text-[13px] leading-snug block mt-0.5">${h}</a>`;
+  briefsList.appendChild(li);
+});
+// mobile carousel reuse
+const mobileCarousel = document.querySelector('.lg\\:hidden .carousel-track');
+briefs.slice(0,6).forEach(([t,h])=>{
+  const div = document.createElement('div');
+  div.className = 'carousel-item shrink-0 w-[220px] bg-[#faf8f3] border border-gray-200 p-3';
+  div.innerHTML = `<span class="text-[11px] text-[#D92121] font-bold block">${t}</span><a href="#" class="headline-link text-[13px] leading-snug block mt-1 font-medium">${h}</a>`;
+  mobileCarousel.appendChild(div);
+});
+
+/* ---------- More News ---------- */
+const moreNews = [
+  ['India', 'Supreme Court reserves verdict on state reorganization petition'],
+  ['Tech', 'Homegrown UPI rival app crosses 50 million downloads in first year'],
+  ['Entertainment', 'Festival favorite indie film picks up three awards at gala'],
+  ['Lifestyle', 'Why Gen-Z is rediscovering filter coffee culture in metro cafes'],
+  ['Business', 'Rupee steadies near 83.2 against dollar amid FII inflows'],
+  ['World', 'Talks resume between neighboring nations over river-water sharing'],
+];
+const moreList = document.getElementById('moreNewsList');
+moreNews.forEach(([cat,h])=>{
+  const li = document.createElement('li');
+  li.className = 'py-3 flex items-start gap-3';
+  li.innerHTML = `<span class="cat-pill text-[10px] font-bold uppercase text-[#D92121] border border-[#D92121] px-1.5 py-0.5 mt-0.5 shrink-0">${cat}</span><a href="#" class="headline-link font-medium leading-snug">${h}</a>`;
+  moreList.appendChild(li);
+});
+
+/* ---------- Most Read / Trending Tabs ---------- */
+const mostRead = [
+  'Bumrah\'s fiery spell turns the tide: full match report',
+  'Income tax slab changes explained: what it means for you',
+  'Mumbai-Ahmedabad bullet train: full route map revealed',
+  'Why onion prices are spiking again this monsoon',
+  'Explained: the new data protection bill, clause by clause',
+];
+const trending = [
+  'Viral video of street vendor\'s AI-run stall sparks debate',
+  'Five Indian cities make it to top 50 startup hubs globally',
+  'Heatwave tips: doctors recommend these hydration habits',
+  'Festival travel rush: railways add 200 special trains',
+  'New OTT series breaks first-week streaming record',
+];
+function fillOrderedList(el, items){
+  items.forEach((t,i)=>{
+    const li = document.createElement('li');
+    li.className = 'py-2.5 flex items-start gap-3';
+    li.innerHTML = `<span class="serif text-xl font-bold text-gray-300 leading-none w-6 shrink-0">${i+1}</span><a href="#" class="headline-link leading-snug">${t}</a>`;
+    el.appendChild(li);
+  });
+}
+fillOrderedList(document.getElementById('mostReadPanel'), mostRead);
+fillOrderedList(document.getElementById('trendingPanel'), trending);
+
+document.querySelectorAll('.tab-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.tab-btn').forEach(b=>{ b.classList.remove('tab-active'); b.classList.add('text-gray-500'); });
+    btn.classList.add('tab-active'); btn.classList.remove('text-gray-500');
+    document.getElementById('mostReadPanel').classList.toggle('hidden', btn.dataset.tab!=='most-read');
+    document.getElementById('trendingPanel').classList.toggle('hidden', btn.dataset.tab!=='trending');
+  });
+});
+
+/* ---------- Opinion ---------- */
+const opinions = [
+  ['Ritu Bhasin', 'Why federal-state fiscal ties need a fresh framework', 'https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=160&q=60'],
+  ['K. Subramaniam', 'The quiet rise of India\'s tier-2 startup belt', 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=160&q=60'],
+  ['Editorial Desk', 'Monsoon governance: lessons cities still haven\'t learned', 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=160&q=60'],
+];
+const opinionList = document.getElementById('opinionList');
+opinions.forEach(([author,title,img])=>{
+  const div = document.createElement('div');
+  div.className = 'flex gap-3';
+  div.innerHTML = `<img loading="lazy" src="${img}" class="w-16 h-16 object-cover shrink-0 lazy-img">
+    <div><a href="#" class="headline-link serif font-bold text-sm leading-snug block">${title}</a><span class="text-xs text-gray-500">By ${author}</span></div>`;
+  opinionList.appendChild(div);
+});
+
+/* ---------- Local news by edition ---------- */
+const localData = {
+  'Bengaluru': ['BBMP launches pothole-reporting app ahead of monsoon','Whitefield metro extension survey work begins','Traffic police pilot AI signal system on ORR'],
+  'Mumbai': ['BMC ramps up desilting drive before peak monsoon','Coastal road project final stretch opens to traffic','Local train frequency increased on Harbour line'],
+  'Delhi': ['DDA to auction 12 commercial plots in Dwarka','Yamuna water levels monitored after upstream rain','New flyover at Mukarba Chowk nears completion'],
+  'Kolkata': ['Howrah bridge repainting work to begin next week','Metro extends services on Purple line for festival rush','Civic body tightens drainage norms after waterlogging'],
+  'Chennai': ['Chennai Metro Phase-2 tunneling crosses halfway mark','Marina beach clean-up drive draws record volunteers','New desalination plant to ease summer water stress'],
+  'NRI Edition': ['Diaspora investment in Indian startups hits new high','Direct flights between Bengaluru and Toronto announced','Overseas voter registration drive extended by a month'],
+};
+function renderLocalNews(city){
+  const list = document.getElementById('localNewsList');
+  list.innerHTML = '';
+  (localData[city]||localData['Bengaluru']).forEach(h=>{
+    const li = document.createElement('li');
+    li.innerHTML = `<a href="#" class="headline-link flex items-start gap-2"><i data-lucide="chevron-right" class="w-3.5 h-3.5 mt-0.5 text-[#D92121] shrink-0"></i><span>${h}</span></a>`;
+    list.appendChild(li);
+  });
+  lucide.createIcons();
+}
+renderLocalNews('Bengaluru');
+
+/* ---------- Photo Carousel (sidebar) ---------- */
+const galleryImgs = [
+  {src:'https://images.unsplash.com/photo-1495020689067-958852a7765e?w=600&q=60', cap:'PM inaugurates new highway stretch in Maharashtra.'},
+  {src:'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=600&q=60', cap:'Markets rally as banking stocks lead gains.'},
+  {src:'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=600&q=60', cap:'Construction crews work through the night on flyover.'},
+  {src:'https://images.unsplash.com/photo-1519681393784-d120267933ba?w=600&q=60', cap:'Cricket fans throng the stadium ahead of the final.'},
+  {src:'https://images.unsplash.com/photo-1542744173-8e7e53415bb0?w=600&q=60', cap:'Monsoon clouds gather over the western coastline.'},
+];
+let galIndex = 0;
+function renderGallery(){
+  document.getElementById('photoCarousel').innerHTML = `<img loading="lazy" src="${galleryImgs[galIndex].src}" class="w-full h-40 object-cover lazy-img" alt="gallery">`;
+  document.getElementById('galCaption').textContent = galleryImgs[galIndex].cap;
+  document.getElementById('galCount').textContent = (galIndex+1)+' / '+galleryImgs.length;
+}
+document.getElementById('galPrev').addEventListener('click', ()=>{ galIndex=(galIndex-1+galleryImgs.length)%galleryImgs.length; renderGallery(); });
+document.getElementById('galNext').addEventListener('click', ()=>{ galIndex=(galIndex+1)%galleryImgs.length; renderGallery(); });
+renderGallery();
+
+/* ---------- Live Blog ---------- */
+const liveBlogFeed = document.getElementById('liveBlogFeed');
+const liveUpdates = [
+  ['1:42 PM','Opposition stages walkout over adjournment motion rejection.'],
+  ['1:25 PM','Finance Minister tables supplementary demand for grants.'],
+  ['1:08 PM','Question Hour sees heated exchange over infrastructure spending.'],
+  ['12:50 PM','Speaker calls for order as members raise points of privilege.'],
+  ['12:30 PM','Session begins with obituary references for two former MPs.'],
+];
+function addLiveUpdate(time, text, isNew){
+  const div = document.createElement('div');
+  div.className = 'flex gap-3 ' + (isNew ? 'animate-pulse' : '');
+  div.innerHTML = `<div class="flex flex-col items-center shrink-0 pt-1">
+      <span class="w-2.5 h-2.5 rounded-full bg-[#D92121]"></span>
+      <span class="w-px flex-1 bg-gray-200 mt-1"></span>
+    </div>
+    <div class="pb-1">
+      <span class="text-[11px] font-bold text-[#D92121]">${time}</span>
+      <p class="text-sm leading-snug mt-0.5">${text}</p>
+    </div>`;
+  liveBlogFeed.prepend(div);
+  if(isNew) setTimeout(()=>div.classList.remove('animate-pulse'), 1200);
+}
+liveUpdates.forEach(([t,x])=>addLiveUpdate(t,x,false));
+
+let liveSecondsAgo = 0;
+setInterval(()=>{
+  liveSecondsAgo++;
+  const el = document.getElementById('liveBlogTimer');
+  el.textContent = liveSecondsAgo < 60 ? liveSecondsAgo+'s ago' : Math.floor(liveSecondsAgo/60)+'m ago';
+}, 1000);
+
+const freshUpdates = [
+  'Lok Sabha Speaker announces extension of session by two days.',
+  'Ruling party whip issued ahead of crucial vote tonight.',
+  'Standing committee report on telecom bill to be tabled shortly.',
+  'PM expected to respond to debate at 4 PM today.',
+];
+let fi = 0;
+setInterval(()=>{
+  if(fi < freshUpdates.length){
+    const now = new Date();
+    addLiveUpdate(pad(now.getHours()%12||12)+':'+pad(now.getMinutes())+' '+(now.getHours()>=12?'PM':'AM'), freshUpdates[fi], true);
+    fi++;
+    liveSecondsAgo = 0;
+  }
+}, 25000);
+
+/* ---------- Hero relative time ---------- */
+let heroMin = 2;
+setInterval(()=>{ heroMin++; document.getElementById('heroTime').textContent = heroMin+' mins ago'; }, 60000);
+
+/* ---------- Video Player click ---------- */
+document.getElementById('videoPlayerBox').addEventListener('click', function(){
+  this.innerHTML = `<div class="w-full h-[220px] sm:h-[320px] flex items-center justify-center text-white text-sm bg-black">
+    <span class="flex items-center gap-2"><i data-lucide="loader" class="w-4 h-4 animate-spin"></i> Loading video player…</span></div>`;
+  lucide.createIcons();
+});
+</script>
+</body>
+</html>
