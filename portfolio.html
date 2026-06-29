@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kavya Bist | Portfolio</title>
+    <style>
+        /* Base Reset & Variables */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        :root {
+            --bg-color: #f8f9fa;
+            --text-color: #212529;
+            --primary-color: #007bff;
+            --card-bg: #ffffff;
+            --border-color: #e9ecef;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+
+        /* Navigation */
+        header {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background-color: rgba(255, 255, 255, 0.95);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            z-index: 1000;
+        }
+
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 1rem 2rem;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        .nav-links {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--text-color);
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover {
+            color: var(--primary-color);
+        }
+
+        /* Sections Universal */
+        section {
+            padding: 5rem 2rem 3rem 2rem;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        .section-title {
+            text-align: center;
+            margin-bottom: 3rem;
+            position: relative;
+            font-size: 2rem;
+        }
+
+        .section-title::after {
+            content: '';
+            display: block;
+            width: 50px;
+            height: 4px;
+            background-color: var(--primary-color);
+            margin: 10px auto 0 auto;
+            border-radius: 2px;
+        }
+
+        /* Hero Section */
+        #hero {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            min-height: 90vh;
+            padding-top: 0;
+        }
+
+        #hero h1 {
+            font-size: 3.5rem;
+            margin-bottom: 1rem;
+        }
+
+        #hero p {
+            font-size: 1.25rem;
+            color: #6c757d;
+            max-width: 600px;
+            margin-bottom: 2rem;
+        }
+
+        .btn {
+            display: inline-block;
+            background-color: var(--primary-color);
+            color: white;
+            padding: 0.75rem 2rem;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: 500;
+            transition: background 0.3s;
+        }
+
+        .btn:hover {
+            background-color: #0056b3;
+        }
+
+        /* About & Skills */
+        .about-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+        }
+
+        .skills-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            margin-top: 1rem;
+        }
+
+        .skill-badge {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        /* Projects Grid */
+        .projects-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .project-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+            transition: transform 0.3s;
+        }
+
+        .project-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .project-info {
+            padding: 1.5rem;
+        }
+
+        .project-info h3 {
+            margin-bottom: 0.5rem;
+        }
+
+        .project-info p {
+            color: #6c757d;
+            font-size: 0.95rem;
+            margin-bottom: 1rem;
+        }
+
+        /* Contact Section */
+        #contact {
+            text-align: center;
+            padding-bottom: 5rem;
+        }
+
+        .contact-links {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .contact-links a {
+            color: var(--text-color);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .contact-links a:hover {
+            color: var(--primary-color);
+        }
+
+        footer {
+            text-align: center;
+            padding: 2rem;
+            background-color: var(--card-bg);
+            border-top: 1px solid var(--border-color);
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .about-content {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+            #hero h1 {
+                font-size: 2.5rem;
+            }
+            .nav-links {
+                display: none; /* Can be expanded into a burger menu later */
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <nav>
+            <div class="logo">KB.</div>
+            <ul class="nav-links">
+                <li><a href="#hero">Home</a></li>
+                <li><a href="#about">About</a></li>
+                <li><a href="#projects">Projects</a></li>
+                <li><a href="#contact">Contact</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <section id="hero">
+        <h1>Hi, I'm Kavya Bist</h1>
+        <p>A passionate student exploring the intersections of software development, logical programming, and hardware integration.</p>
+        <a href="#projects" class="btn">View My Work</a>
+    </section>
+
+    <hr style="border: 0; border-top: 1px solid var(--border-color);">
+
+    <section id="about">
+        <h2 class="section-title">About Me</h2>
+        <div class="about-content">
+            <div>
+                <p>I am focused on building clean, efficient solutions to technical problems. My academic and personal projects revolve around understanding system logic from the ground up, whether it's low-level programming or designing connected systems.</p>
+                <br>
+                <p>I thrive on turning complex requirements into structured, functional reality.</p>
+            </div>
+            <div>
+                <h3>Core Competencies</h3>
+                <div class="skills-container">
+                    <span class="skill-badge">C Programming</span>
+                    <span class="skill-badge">Data Structures</span>
+                    <span class="skill-badge">Digital Electronics Logic</span>
+                    <span class="skill-badge">IoT & Embedded Systems</span>
+                    <span class="skill-badge">HTML5 / CSS3</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <hr style="border: 0; border-top: 1px solid var(--border-color);">
+
+    <section id="projects">
+        <h2 class="section-title">Featured Projects</h2>
+        <div class="projects-grid">
+            
+            <div class="project-card">
+                <div class="project-info">
+                    <h3>IoT Smart Security System</h3>
+                    <p>Designed and programmed an embedded security application using microcontrollers, utilizing keypad inputs and I2C display routing for real-time validation logic.</p>
+                </div>
+            </div>
+
+            <div class="project-card">
+                <div class="project-info">
+                    <h3>System Architecture & AI Concepts</h3>
+                    <p>Explored and created conceptual frameworks mapping out how foundational digital electronic logic circuits power modern artificial intelligence hardware accelerators.</p>
+                </div>
+            </div>
+
+            <div class="project-card">
+                <div class="project-info">
+                    <h3>Algorithm & Data Management</h3>
+                    <p>Developed custom implementations focusing on array manipulation, strict structure mapping, and dynamic string parsing applications in C.</p>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <hr style="border: 0; border-top: 1px solid var(--border-color);">
+
+    <section id="contact">
+        <h2 class="section-title">Get In Touch</h2>
+        <p>I am always open to discussing technical projects, academic collaborations, or development opportunities.</p>
+        <div class="contact-links">
+            <a href="mailto:your.email@example.com">Email Me</a>
+            <a href="#" target="_blank">LinkedIn</a>
+            <a href="#" target="_blank">GitHub</a>
+        </div>
+    </section>
+
+    <footer>
+        <p>&copy; 2026 Kavya Bist. Built from scratch.</p>
+    </footer>
+
+</body>
+</html>
